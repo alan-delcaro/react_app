@@ -1,108 +1,360 @@
-# 2. Otimização da Captura Automática
+# 2. De Automático até 100% Customizado
 
-## A Decisão: Automático vs. Manual
+## Decision Framework: Quando Customizar?
 
-O SDK oferece dois modos de captura de interações:
+A chave é **balancear captura automática com insights acionáveis**. Use este framework:
 
 ```
-AUTOMÁTICO → rápido de configurar, nomes genéricos, muito ruído
-MANUAL     → trabalho extra, nomes semânticos, dados acionáveis para SRE
+┌─────────────────────────────────────────────────────────────┐
+│ DECISÃO: Devo Instrumentar Manualmente Esta Ação?          │
+├─────────────────────────────────────────────────────────────┤
+│ ✅ SIM se:                  │ ❌ NÃO se:                     │
+│ • Afeta revenue/conversão   │ • É detalhe técnico raro       │
+│ • Usuário espera resultado  │ • Automático já nomeia bem      │
+│ • Preciso de contexto SLA   │ • Volume de ações > 100/sessão │
+│ • Erro de negócio (não bug) │ • Overhead supera valor        │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-Este projeto optou por **100% manual**. A tabela abaixo mostra a diferença prática:
+### Exemplo: App de Pontos de Fidelidade
 
-| Modo                              | Nome da ação no Dynatrace                     | Utilidade para SRE                  |
-| --------------------------------- | --------------------------------------------- | ----------------------------------- |
-| Automático                        | `Touch on Button`                             | ❌ Impossível distinguir qual botão |
-| Automático + `accessibilityLabel` | `Touch on Ir para Prêmios`                    | ⚠️ Melhor, mas sem contexto         |
-| Manual (`dtRum.clique`)           | `Clique - Home - Acessar Catálogo de Prêmios` | ✅ Acionável diretamente            |
+| Ação                   | Automático?          | Customizar? | Razão                                       |
+| ---------------------- | -------------------- | ----------- | ------------------------------------------- |
+| Toque em "Clique Aqui" | ✅ Sim               | ❌ Não      | Nome genérico mas raro                      |
+| Abrir aba "Prêmios"    | ✅ Sim               | ✅ Sim      | Jornada crítica → reportar TTI              |
+| Processar pagamento    | ✅ Sim               | ✅ Sim      | Revenue critical → capturar erro de negócio |
+| Scroll infinito        | ⚠️ Ruidoso           | ✅ Sim      | Muitos "swipes" → consolidar em 1 métrica   |
+| Crash de JS            | ⚠️ Stack trace bruto | ✅ Sim      | Erro sem contexto → adicionar userId        |
 
-## Quando Usar `input.instrument: true` (Seletivo)
+---
 
-Se preferir instrumentação automática em partes do código:
+## Estágio 1: Automático (0% Customização)
+
+**Configuração:**
 
 ```js
 // dynatrace.config.js
-input: {
-  // Instrumenta apenas a pasta de checkout — fluxo crítico
-  instrument: (filename) => filename.includes("checkout"),
-},
+module.exports = {
+  input: {
+    instrument: true, // ✅ Captura TODOS os cliques, gestos, HTTP
+  },
+  lifecycle: {
+    includeUpdate: true, // ✅ Captura ciclo de vida do React Native
+  },
+};
 ```
 
-Combine isso com `accessibilityLabel` nos componentes para nomes legíveis:
+**O que você ganha de graça:**
 
-```jsx
-<TouchableOpacity
-  accessibilityLabel="Confirmar Pagamento"
-  onPress={handlePagamento}
->
-```
+- ✅ Todas as sessões com `init_timestamp`, `duration`, `crash_reported`
+- ✅ Todos os taps, swipes, HTTP (GET/POST, status, latência)
+- ✅ Crashes de JS com stack trace nativo
+- ✅ Localização, SDK version, device info
 
-## Sub-Actions para Fluxos Compostos
+**O que falta:**
 
-Quando uma ação do usuário dispara múltiplas operações paralelas, use `createSubAction` para criar um **waterfall** visível no Dynatrace:
+- ❌ Nome das ações: `"Touch on View"` (qual componente?)
+- ❌ Contexto de negócio: qual promoção o usuário viu?
+- ❌ Erro de negócio: "Pagamento negado" vs. "HTTP 500"?
+- ❌ SLA por jornada: quanto tempo de Home → Checkout?
 
-```
-Home - Carregar Dashboard        30ms   ← ação pai (withAction)
-  ├─ Tile - Cartão de Pontos     12ms   ← subAcao → api.getUsuario()
-  └─ Tile - Transações Recentes  18ms   ← subAcao → api.getTransacoes()
-```
+**Use quando:**
 
-**Implementação no projeto:**
+- MVP com < 1000 usuários/dia
+- Buscando baseline antes de otimizar
+- Compliance (apenas deve coletar, não investigar)
+
+---
+
+## Estágio 2: Automático + Customizações Estratégicas (20% Customização)
+
+**Configuração:**
 
 ```js
-// src/screens/HomeScreen.js
-const carregarDados = useCallback(async () => {
-  await dtRum.withAction("Home - Carregar Dashboard", async (parentAction) => {
-    const [usuario, txns] = await Promise.all([
-      dtRum.subAcao(parentAction, "Tile - Cartão de Pontos", () =>
+// dynatrace.config.js
+module.exports = {
+  input: {
+    instrument: true, // ✅ Captura automática...
+    suppressedPatterns: [
+      /HomeScreen/, // ...exceto HomeScreen (vamos instrumentar manualmente)
+    ],
+  },
+  lifecycle: {
+    includeUpdate: false, // ❌ Suprime ruído de "Component Update"
+  },
+};
+```
+
+**O que adicionar manualmente:**
+
+### 1️⃣ **User Journeys Críticas** — Medida de Negócio
+
+```js
+// Envolver tudo em HomeScreen num withAction
+const HomeScreen = () => {
+  const screenStartTime = useRef(Date.now());
+
+  useEffect(() => {
+    dtRum.withAction("Home - Carregar Dashboard", async (parent) => {
+      // Sub-actions para entender gargalos
+      const usuario = await dtRum.subAcao(parent, "API - Buscar Usuário", () =>
         api.getUsuario(),
-      ),
-      dtRum.subAcao(parentAction, "Tile - Transações Recentes", () =>
-        api.getTransacoes(),
-      ),
-    ]);
-    setUserData(usuario);
-    setTransacoes(txns.slice(0, 3));
-  });
-}, []);
+      );
+      const premios = await dtRum.subAcao(parent, "API - Buscar Prêmios", () =>
+        api.getPremios(),
+      );
+
+      // TTI: quanto tempo até a página ficar pronta
+      dtRum.telaCarregada("Home", screenStartTime.current, {
+        nivel_usuario: usuario.nivel,
+        total_premios: premios.length,
+      });
+    });
+  }, []);
+};
 ```
 
-**Valor para SRE:** Se o TTI da Home aumentar, o waterfall mostra imediatamente qual sub-action degradou — `getUsuario()` ou `getTransacoes()` — sem precisar acessar logs.
+**Resultado no Dynatrace:**
 
-## Medição de Time to Interactive (TTI)
+```
+Home - Carregar Dashboard               850ms ← ação pai
+├─ API - Buscar Usuário                120ms   [sub-action]
+├─ API - Buscar Prêmios                630ms   [sub-action] ⚠️ Lento!
+└─ Home - Tela Carregada               tti_ms: 850
+```
+
+### 2️⃣ **Conversão & Revenue** — Erro de Negócio
 
 ```js
-// Topo do componente — antes de qualquer render condicional
-const screenStartTime = useRef(Date.now());
+const processarPagamento = async () => {
+  try {
+    const result = await dtRum.apiCall("Pagamento - Processar", () =>
+      api.post("/pagamento", { valor: 50 }),
+    );
 
-// Após todos os dados carregarem
-dtRum.telaCarregada("Home", screenStartTime.current, {
-  total_promocoes: promocoes.length,
-  total_transacoes: transacoes.length,
+    if (result.status === "negado") {
+      // ❌ Erro de NEGÓCIO (não bug técnico)
+      dtRum.erroBusiness(
+        `Pagamento negado: ${result.motivo}`,
+        result.codigo, // ex: "insufficient_balance"
+      );
+    }
+  } catch (err) {
+    // ❌ Erro TÉCNICO (HTTP, timeout, etc)
+    dtRum.erroBusiness(`Erro técnico: ${err.message}`, "TECH_ERROR");
+  }
+};
+```
+
+### 3️⃣ **Session Properties (USQL Queryable)**
+
+```js
+// Após login bem-sucedido
+dtRum.identificarUsuario("user_123", {
+  nivel: "Gold",
+  segmento: "high_value",
+});
+
+// Atualizar propriedades em tempo real
+dtRum.sessao({
   nivel_usuario: userData.nivel,
+  pontos_usuario: userData.pontos,
+  segmento_usuario: userData.segmento,
 });
 ```
 
-O TTI é reportado como `tti_ms` na ação `"Home - Tela Carregada"`. Para criar um alerta de SLO no Dynatrace:
+**Query no Dynatrace USQL:**
 
-> `Frontend → [App] → Performance → Create SLO`  
-> Métrica: `builtin:apps.mobile.apdex.load`  
-> Filtro: `action.name = "Home - Tela Carregada"`
+```sql
+SELECT userid, app.build, COUNT(*) as crashes
+FROM usersession
+WHERE stringProperties.nivel_usuario = "Gold"
+GROUP BY userid
+```
 
-## Otimização: `lifecycleUpdate` vs. `instrument`
+**Use este estágio quando:**
+
+- App tem 1K-100K usuários/dia
+- Modelo de negócio depende de conversão
+- SRE precisa entender "por que o TTI aumentou?"
+
+---
+
+## Estágio 3: 100% Customizado (100% Customização)
+
+**Configuração:**
 
 ```js
-// Para aplicações grandes, considere:
-lifecycle: {
-  // Se false: suprime "HomeScreen Update" e similares
-  // Se true: captura lifecycle do React Native — pode gerar ruído
-  includeUpdate: false,
-
-  // Para instrumentar seletivamente por arquivo:
-  instrument: (filename) => filename.includes("checkout"),
-},
+// dynatrace.config.js
+module.exports = {
+  input: {
+    instrument: false, // ❌ Zero automático — controle total
+  },
+  lifecycle: {
+    includeUpdate: false,
+  },
+};
 ```
+
+**Quando implementar:**
+
+- High-traffic apps (> 1M events/dia) — payload importa
+- Compliance strict (LGPD, CCPA) — coletar apenas necessário
+- Backend crítico — instrumentar só rotas importantes
+
+**Wrapper dtRum (10 métodos core):**
+
+```js
+// src/monitoring/dtRum.js
+export const dtRum = {
+  init(),                          // Inicializar SDK
+  identificarUsuario(userId, tags),  // User identification
+  sessao(atributos),                 // Session enrichment
+  telaCarregada(nome, startTime, props),  // TTI + page-level metrics
+  clique(elemento, contexto),        // User interaction
+  withAction(nome, fn),              // Parent action + error handling
+  subAcao(parent, nome, fn),         // Child action
+  apiCall(nome, fn),                 // HTTP monitoring
+  evento(descricao),                 // Lightweight event
+  erroBusiness(descricao, codigo),   // Business error
+};
+```
+
+**Exemplo: Checkout Flow 100% Customizado**
+
+```js
+const checkout = async () => {
+  await dtRum.withAction("Checkout - Processar", async (parent) => {
+    // Validar
+    await dtRum.subAcao(parent, "Validação - Endereço", () =>
+      validateAddress(formData),
+    );
+
+    // Pagar
+    const paymentResult = await dtRum.subAcao(
+      parent,
+      "Pagamento - Processar",
+      () => api.processPagamento({ ...formData }),
+    );
+
+    if (paymentResult.approved) {
+      dtRum.evento("Conversão - Pedido Confirmado");
+      dtRum.sessao({ conversao_status: "sucesso" });
+    } else {
+      dtRum.erroBusiness(
+        `Pagamento rejeitado: ${paymentResult.error}`,
+        `PAG_${paymentResult.errorCode}`,
+      );
+    }
+  });
+};
+```
+
+---
+
+## Boas Práticas: O Que Considerar Ao Criar Ações Customizadas
+
+### 1. **Naming Convention**
+
+```
+[Categoria] - [Tela/Contexto] - [Ação Específica]
+
+✅ Bom:     "Pagamento - Checkout - Processar Transação"
+❌ Ruim:    "process"
+❌ Ruim:    "clique em botao"
+❌ Ruim:    "update user profile details"
+```
+
+### 2. **Granularidade**
+
+```js
+// ❌ Muito granular — ruído demais
+Object.values(formData).forEach((field) => {
+  dtRum.evento(`Campo alterado: ${field}`); // 30+ eventos por sessão
+});
+
+// ✅ Perfeito — 1 métrica por jornada
+dtRum.withAction("Formulário - Preencher", async (parent) => {
+  // Todas as alterações dentro
+  await updateForm(formData);
+});
+```
+
+### 3. **Context Matters**
+
+```js
+// ❌ Sem contexto — impossível debugar
+dtRum.apiCall("GET Request", () => fetch(url));
+
+// ✅ Com contexto — acionável imediatamente
+dtRum.apiCall("API - Buscar Usuário", () => fetch(`/usuarios/${userId}`));
+```
+
+### 4. **Error Categorization**
+
+```
+Erro TÉCNICO               Erro DE NEGÓCIO
+├─ HTTP 500               ├─ Saldo insuficiente
+├─ Timeout                ├─ CPF inválido
+├─ JSON parse error       ├─ Cupom expirado
+└─ Connection lost        └─ Limite de transações
+```
+
+**Implementação:**
+
+```js
+try {
+  const result = await api.processar();
+  if (result.status === "ERRO_NEGOCIO") {
+    dtRum.erroBusiness(`${result.mensagem}`, result.codigo);
+  }
+} catch (techError) {
+  dtRum.erroBusiness(`Erro técnico: ${techError.message}`, "TECH_ERROR");
+}
+```
+
+### 5. **TTI (Time to Interactive) é REI (Return on Engineering Investment)**
+
+```
+Se TTI de HomeScreen < 500ms:
+  • Usuários completam mais ações
+  • Conversão aumenta 5-10%
+  • Retenção melhora
+
+Portanto: SEMPRE monitore TTI de jornadas críticas
+```
+
+---
+
+## Migration Path: Automático → 100% Customizado
+
+```
+Mês 1: Automático puro
+  ↓ (Coletar dados, entender padrões)
+
+Mês 2: Automático + Jornadas críticas
+  ↓ (Adicionar HomeScreen, Checkout, Payment)
+
+Mês 3: Automático + Error handling estratégico
+  ↓ (Categorizar erros de negócio)
+
+Mês 4-5: 100% Customizado (opcional)
+  ↓ (Se volume/compliance exigir)
+
+Contínuo: Otimizar baseado em alertas + dashboards USQL
+```
+
+---
+
+## Próxima Etapa
+
+→ [**3. Enriquecimento de Dados com Session Properties**](3-session-properties.md)
+
+// Para instrumentar seletivamente por arquivo:
+instrument: (filename) => filename.includes("checkout"),
+},
+
+````
 
 ## Monitoramento de Performance do SDK
 
@@ -116,7 +368,7 @@ react: {
   // "Dynatrace: instrumented function X"
   // "Dynatrace: action X finished"
 },
-```
+````
 
 ---
 

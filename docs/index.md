@@ -1,36 +1,63 @@
-# Observabilidade Mobile com Dynatrace
+# Dynatrace RUM — React Native Instrumentation Guide
 
-**Referência técnica para times de SRE e Engenharia Mobile**
+**De Automático a 100% Customizado: Referência Técnica para SRE & Mobile Engineers**
 
-> Capacite seu time a investigar e resolver incidentes mobile em produção com dados de observabilidade coletados desde o cliente, correlacionados com o backend e infraestrutura.
+> Comece com captura automática zero-code, evolua para instrumentação semântica customizada e implemente observabilidade full-stack correlacionada entre mobile, backend e infraestrutura.
 
 ---
 
-## 📚 Documentação
+## 🚀 Três Caminhos de Instrumentação
 
-### Primeiros Passos
+### 1️⃣ **Automático** — Zero Configuração
 
-- [**Setup Inicial e Configuração**](guias/1-setup-config.md)  
-  Plugin, metro.config.js, dynatrace.config.js, o que é capturado automaticamente
+- O SDK captura automaticamente: sessões, crashes, HTTP, localizações, exceções
+- **Melhor para**: MVP, prototipagem rápida
+- [Setup Inicial e Configuração](guias/1-setup-config.md) — Entenda o que você ganha de graça
 
-- [**Otimização da Captura Automática**](guias/2-otimizacao.md)  
-  Input vs. Manual, Sub-actions, Time to Interactive (TTI)
+### 2️⃣ **Automático + Customizações** — 80% Automatizado + 20% Manual
 
-### Para SREs e Arquitetos
+- Mantenha a captura automática, adicione actions semânticas personalizadas
+- **Melhor para**: Monitorar jornadas críticas de usuário, contexto de negócio
+- [Otimização Inteligente](guias/2-otimizacao.md) — Quando e como customizar sem ruído
 
-- [**Enriquecimento de Dados**](guias/3-session-properties.md)  
-  Session Properties, Action Properties, User Tags, Identificação de Usuários
+### 3️⃣ **100% Customizado** — Controle Total
 
-- [**Padrões e Boas Práticas**](guias/4-padroes-sre.md)  
-  Wrapper dtRum, Convenção de Nomenclatura, Instrumentação de Erros
+- Desative automático, instrumente apenas o que importa
+- **Melhor para**: Apps com tráfego alto, otimização de payload, compliance
+- [Padrões SRE Avançados](guias/4-padroes-sre.md) — Wrapper dtRum, naming conventions, error handling
 
-- [**Correlação Full-Stack**](guias/5-full-stack.md)  
-  Rastreamento Distribuído, Service Map, Davis AI, USQL para Dashboards
+---
 
-### Troubleshooting
+## 📚 Documentação Estruturada
 
-- [**Guia Rápido de Troubleshooting**](guias/6-troubleshooting.md)  
-  Checklists, Validação em Desenvolvimento, Comandos de Debug
+### Fase 1: Automático
+
+- ✅ [**1. Setup e Captura Automática**](guias/1-setup-config.md)  
+  Plugin, Metro config, o que é capturado, como validar
+
+### Fase 2: Automático + Customizações
+
+- 🎯 [**2. Otimização Inteligente**](guias/2-otimizacao.md)  
+  **Decisão Framework**: Automático vs. Manual | Sub-actions | TTI  
+  **O que Monitorar**: User Journeys críticas | Pontos de conversão | Erros de negócio
+
+- 🏷️ [**3. Enriquecimento de Dados**](guias/3-session-properties.md)  
+  Session Properties (USQL queryable) | User Context | Business Attributes
+
+### Fase 3: 100% Customizado & Full-Stack
+
+- 🔧 [**4. Padrões SRE Avançados**](guias/4-padroes-sre.md)  
+  **Wrapper dtRum**: 10 métodos core, testes unitários  
+  **Naming Conventions**: Padrões por tipo de ação  
+  **Error Categorization**: Technical vs. Business errors
+
+- 🏗️ [**5. Correlação Full-Stack**](guias/5-full-stack.md)  
+  Rastreamento distribuído (W3C Trace Context) | Service Map | USQL Dashboards | Davis AI
+
+### Troubleshooting & Validação
+
+- 🔍 [**6. Troubleshooting & Debug**](guias/6-troubleshooting.md)  
+  Checklists independentes | Validação local | Comandos de debug
 
 ---
 
