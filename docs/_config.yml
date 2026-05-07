@@ -1,6 +1,6 @@
 theme: jekyll-theme-midnight
 title: "Dynatrace RUM — React Native Instrumentation Guide"
-description: "Referência técnica para SRE — De automático a 100% customizado"
+description: "De Automático a 100% Customizado: Referência Técnica para SRE & Mobile Engineers"
 author: "Alan Delcaro"
 github:
   repository_url: https://github.com/alan-delcaro/react_app
@@ -14,18 +14,6 @@ plugins:
 # Build settings
 markdown: kramdown
 highlighter: rouge
-
-# Layout
-head_includes:
-  - <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  - <style>
-      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto; background: #0d1117; }
-      .page-header { margin-bottom: 2rem; }
-      code { background: #161b22; color: #79c0ff; padding: 0.2rem 0.4rem; border-radius: 3px; }
-      pre { background: #0d1117; border-left: 4px solid #1f6feb; }
-      a { color: #58a6ff; }
-      a:hover { color: #79c0ff; }
-    </style>
 
 # Defaults
 defaults:

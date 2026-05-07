@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ page.title | default: site.title }}</title>
+
+    <!-- Bootstrap 5.3 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Prism for code highlighting -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --primary-color: #1f6feb;
+        --secondary-color: #58a6ff;
+        --text-primary: #c9d1d9;
+        --text-secondary: #8b949e;
+        --bg-primary: #0d1117;
+        --bg-secondary: #161b22;
+        --bg-tertiary: #1c2128;
+        --border-color: #30363d;
+        --code-bg: #0d1117;
+        --code-text: #79c0ff;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      /* Header/Navigation */
+      header {
+        background: linear-gradient(
+          180deg,
+          var(--bg-secondary) 0%,
+          var(--bg-primary) 100%
+        );
+        border-bottom: 1px solid var(--border-color);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+      }
+
+      header h1 {
+        color: var(--secondary-color);
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+
+      header p {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        margin: 0;
+      }
+
+      /* Main Content */
+      main {
+        flex: 1;
+        padding: 2rem 0;
+      }
+
+      .container-fluid {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+
+      /* Sidebar Navigation */
+      .sidebar {
+        position: sticky;
+        top: 2rem;
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
+        padding-right: 2rem;
+      }
+
+      .sidebar h3 {
+        color: var(--secondary-color);
+        font-size: 0.875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 1.5rem 0 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .sidebar ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .sidebar li {
+        margin-bottom: 0.5rem;
+      }
+
+      .sidebar a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.95rem;
+        padding: 0.5rem 0;
+        display: block;
+        border-left: 2px solid transparent;
+        padding-left: 0.75rem;
+        transition: all 0.2s;
+      }
+
+      .sidebar a:hover {
+        color: var(--secondary-color);
+        border-left-color: var(--secondary-color);
+      }
+
+      /* Headings */
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        color: var(--secondary-color);
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+      h2 {
+        font-size: 1.75rem;
+      }
+      h3 {
+        font-size: 1.5rem;
+      }
+      h4 {
+        font-size: 1.25rem;
+      }
+      h5 {
+        font-size: 1.1rem;
+      }
+      h6 {
+        font-size: 1rem;
+      }
+
+      h2:first-child {
+        margin-top: 0;
+      }
+
+      /* Links */
+      a {
+        color: var(--secondary-color);
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      a:hover {
+        color: #79c0ff;
+        text-decoration: underline;
+      }
+
+      /* Code blocks */
+      code {
+        background: var(--code-bg);
+        color: var(--code-text);
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 0.9em;
+      }
+
+      pre {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 1rem;
+        overflow-x: auto;
+        margin: 1.5rem 0;
+      }
+
+      pre code {
+        background: none;
+        color: inherit;
+        padding: 0;
+        border-radius: 0;
+      }
+
+      /* Tables */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.5rem 0;
+        font-size: 0.95rem;
+      }
+
+      table thead {
+        background: var(--bg-secondary);
+        border-bottom: 2px solid var(--border-color);
+      }
+
+      table th {
+        color: var(--secondary-color);
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: 700;
+      }
+
+      table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      table tbody tr:hover {
+        background: var(--bg-secondary);
+      }
+
+      table tbody tr:nth-child(even) {
+        background: var(--bg-tertiary);
+      }
+
+      /* Blockquotes */
+      blockquote {
+        background: var(--bg-secondary);
+        border-left: 4px solid var(--primary-color);
+        padding: 1rem;
+        margin: 1.5rem 0;
+        border-radius: 0 4px 4px 0;
+        color: var(--text-secondary);
+        font-style: italic;
+      }
+
+      blockquote strong {
+        color: var(--secondary-color);
+        font-style: normal;
+      }
+
+      /* Lists */
+      ul,
+      ol {
+        margin: 1rem 0;
+        padding-left: 2rem;
+      }
+
+      li {
+        margin-bottom: 0.5rem;
+      }
+
+      /* Emphasis */
+      strong {
+        color: var(--secondary-color);
+        font-weight: 700;
+      }
+
+      em {
+        color: var(--text-secondary);
+        font-style: italic;
+      }
+
+      /* Horizontal rule */
+      hr {
+        border: 0;
+        border-top: 1px solid var(--border-color);
+        margin: 2rem 0;
+      }
+
+      /* Cards/Boxes */
+      .alert {
+        background: var(--bg-secondary);
+        border-left: 4px solid var(--primary-color);
+        padding: 1rem;
+        margin: 1.5rem 0;
+        border-radius: 0 4px 4px 0;
+      }
+
+      .alert-info {
+        border-left-color: var(--secondary-color);
+        color: var(--text-primary);
+      }
+
+      .alert-warning {
+        border-left-color: #d29922;
+        color: #f0883e;
+      }
+
+      .alert-danger {
+        border-left-color: #f85149;
+        color: #ff7b72;
+      }
+
+      /* Button */
+      .btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: var(--primary-color);
+        color: #fff;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+      }
+
+      .btn:hover {
+        background: var(--secondary-color);
+        color: var(--bg-primary);
+      }
+
+      /* Footer */
+      footer {
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border-color);
+        padding: 2rem 0;
+        margin-top: 3rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        text-align: center;
+      }
+
+      footer a {
+        color: var(--secondary-color);
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .container-fluid {
+          padding: 0 1rem;
+        }
+
+        .row {
+          flex-direction: column;
+        }
+
+        .sidebar {
+          padding-right: 0;
+          margin-bottom: 2rem;
+        }
+
+        header h1 {
+          font-size: 1.75rem;
+        }
+
+        h1 {
+          font-size: 1.5rem;
+        }
+        h2 {
+          font-size: 1.25rem;
+        }
+        h3 {
+          font-size: 1.1rem;
+        }
+      }
+
+      /* Scrollbar styling */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-secondary);
+      }
+    </style>
+  </head>
+
+  <body class="d-flex flex-column">
+    <header>
+      <div class="container-fluid">
+        <h1>{{ site.title | default: "Dynatrace RUM Guide" }}</h1>
+        <p>{{ site.description }}</p>
+      </div>
+    </header>
+
+    <main>
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-lg-9">{{ content }}</div>
+
+          <div class="col-lg-3">
+            <nav class="sidebar">
+              <h3>📚 Navegação</h3>
+              <ul>
+                <li><a href="{{ site.baseurl }}/">← Voltar ao Início</a></li>
+              </ul>
+
+              <h3>1️⃣ Automático</h3>
+              <ul>
+                <li>
+                  <a href="{{ site.baseurl }}/guias/1-setup-config.md"
+                    >Setup & Captura Automática</a
+                  >
+                </li>
+              </ul>
+
+              <h3>2️⃣ Automático + Custom</h3>
+              <ul>
+                <li>
+                  <a href="{{ site.baseurl }}/guias/2-otimizacao.md"
+                    >Decision Framework</a
+                  >
+                </li>
+                <li>
+                  <a href="{{ site.baseurl }}/guias/3-session-properties.md"
+                    >Enriquecimento de Dados</a
+                  >
+                </li>
+              </ul>
+
+              <h3>3️⃣ 100% Customizado</h3>
+              <ul>
+                <li>
+                  <a href="{{ site.baseurl }}/guias/4-padroes-sre.md"
+                    >Padrões SRE</a
+                  >
+                </li>
+                <li>
+                  <a href="{{ site.baseurl }}/guias/5-full-stack.md"
+                    >Full-Stack Observability</a
+                  >
+                </li>
+              </ul>
+
+              <h3>🔍 Troubleshooting</h3>
+              <ul>
+                <li>
+                  <a href="{{ site.baseurl }}/guias/6-troubleshooting.md"
+                    >Debug & Validação</a
+                  >
+                </li>
+              </ul>
+
+              <h3>🔗 Links</h3>
+              <ul>
+                <li>
+                  <a
+                    href="https://github.com/alan-delcaro/react_app"
+                    target="_blank"
+                    >GitHub Repository</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/alan-delcaro/react_app/issues"
+                    target="_blank"
+                    >Report Issues</a
+                  >
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="container-fluid">
+        <p>&copy; 2026 Alan Delcaro. Dynatrace Mobile Instrumentation Guide.</p>
+        <p>Tema: Midnight | Bootstrap 5.3 | GitHub Pages</p>
+      </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Prism for code highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+  </body>
+</html>

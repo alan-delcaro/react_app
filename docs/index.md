@@ -1,3 +1,8 @@
+---
+layout: default
+title: "Dynatrace RUM — React Native Instrumentation Guide"
+---
+
 # Dynatrace RUM — React Native Instrumentation Guide
 
 **De Automático a 100% Customizado: Referência Técnica para SRE & Mobile Engineers**
