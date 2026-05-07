@@ -1,0 +1,27 @@
+theme: jekyll-theme-minimal
+title: "Observabilidade Mobile com Dynatrace"
+description: "Referência técnica para SRE — React Native full-stack instrumentation"
+author: "Alan Delcaro"
+github:
+  repository_url: https://github.com/alan-delcaro/react_app
+  issues_url: https://github.com/alan-delcaro/react_app/issues
+
+# Plugins
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+
+# Navigation
+nav_order: 1
+has_children: false
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
